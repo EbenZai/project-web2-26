@@ -17,16 +17,9 @@ public class Product {
     @Column(nullable = false, length = 200)
     private String name;
 
-    // Di bagian atas file, hapus import enum lama jika ada
-
-    @ManyToOne
-    @JoinColumn(name = "category_id") // Nama kolom di tabel produk
-    private Category category; // Sekarang tipenya adalah Class Category (Entity)
-
-    // Update Getter dan Setter-nya agar menerima objek Category
-    public Category getCategory() { return category; }
-    public void setCategory(Category category) { this.category = category; }
-
+    @Enumerated(EnumType.STRING)
+    @Column(length = 50)
+    private Category category;
 
     private long price;
 

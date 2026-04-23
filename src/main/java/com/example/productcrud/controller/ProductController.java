@@ -1,5 +1,6 @@
 package com.example.productcrud.controller;
 
+import com.example.productcrud.model.Category;
 import com.example.productcrud.model.Product;
 import com.example.productcrud.model.User;
 import com.example.productcrud.repository.UserRepository;
