@@ -3,9 +3,11 @@ package com.example.productcrud.controller;
 import com.example.productcrud.model.Category;
 import com.example.productcrud.model.Product;
 import com.example.productcrud.model.User;
+import com.example.productcrud.repository.CategoryRepository;
 import com.example.productcrud.repository.UserRepository;
 import com.example.productcrud.service.ProductService;
 import java.time.LocalDate;
+import java.util.List;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
@@ -18,10 +20,14 @@ public class ProductController {
 
     private final ProductService productService;
     private final UserRepository userRepository;
+    private final CategoryRepository categoryRepository;
 
-    public ProductController(ProductService productService, UserRepository userRepository) {
+    public ProductController(ProductService productService,
+                             UserRepository userRepository,
+                             CategoryRepository categoryRepository) {
         this.productService = productService;
         this.userRepository = userRepository;
+        this.categoryRepository = categoryRepository;
     }
 
     private User getCurrentUser(UserDetails userDetails) {
@@ -59,11 +65,15 @@ public class ProductController {
     }
 
     @GetMapping("/products/new")
-    public String showCreateForm(Model model) {
+    public String showCreateForm(@AuthenticationPrincipal UserDetails userDetails, Model model) {
+        User currentUser = getCurrentUser(userDetails);
+        List<Category> categories = categoryRepository.findByUser(currentUser);
+
         Product product = new Product();
         product.setCreatedAt(LocalDate.now());
+
         model.addAttribute("product", product);
-        model.addAttribute("categories", Category.values());
+        model.addAttribute("categories", categories);
         return "product/form";
     }
 
@@ -74,7 +84,6 @@ public class ProductController {
         User currentUser = getCurrentUser(userDetails);
 
         if (product.getId() != null) {
-            // Edit: pastikan produk milik user ini
             boolean isOwner = productService.findByIdAndOwner(product.getId(), currentUser).isPresent();
             if (!isOwner) {
                 redirectAttributes.addFlashAttribute("errorMessage", "Produk tidak ditemukan.");
@@ -93,10 +102,12 @@ public class ProductController {
                                @AuthenticationPrincipal UserDetails userDetails,
                                Model model, RedirectAttributes redirectAttributes) {
         User currentUser = getCurrentUser(userDetails);
+        List<Category> categories = categoryRepository.findByUser(currentUser);
+
         return productService.findByIdAndOwner(id, currentUser)
                 .map(product -> {
                     model.addAttribute("product", product);
-                    model.addAttribute("categories", Category.values());
+                    model.addAttribute("categories", categories);
                     return "product/form";
                 })
                 .orElseGet(() -> {
